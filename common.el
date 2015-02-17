@@ -655,6 +655,7 @@
 ;;; キーバインドの変更
 ;;; お好みでどうぞ
 
+(define-key global-map (kbd "M-g") 'goto-line)
 (define-key global-map (kbd "C-q") 'read-only-mode)
 (define-key global-map (kbd "C-^") `enlarge-window)
 (define-key global-map (kbd "C-x i") 'indent-region)
