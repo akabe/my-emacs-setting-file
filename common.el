@@ -47,7 +47,7 @@
   :family "DejaVu Sans Mono") ;; font size
 ;;; 日本語fontの設定
 (set-fontset-font nil 'japanese-jisx0208
-  (font-spec :family "IPAゴシック"))
+  (font-spec :family "RictyDiminished"))
 
 ;;; guide-key
 ;;; http://www.kaichan.info/blog/2012-12-03-emacs-advent-calendar-2012-03.html
@@ -635,6 +635,28 @@
     (howm-mode))
   (add-hook 'howm-create-file-hook 'howm-my-initial-setup)
   (add-hook 'howm-view-open-hook 'howm-my-initial-setup))
+
+;;;
+;;; Web mode
+;;;
+
+(require 'web-mode)
+
+(add-to-list 'auto-mode-alist '("\\.phtml$"     . web-mode))
+(add-to-list 'auto-mode-alist '("\\.tpl\\.php$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jsp$"       . web-mode))
+(add-to-list 'auto-mode-alist '("\\.as[cp]x$"   . web-mode))
+(add-to-list 'auto-mode-alist '("\\.erb$"       . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?$"     . web-mode))
+
+(defun web-mode-hook ()
+  "Hooks for Web mode."
+  (setq web-mode-markup-indent-offset 4)
+  (setq web-mode-css-indent-offset    4)
+  (setq web-mode-code-indent-offset   4)
+  (setq indent-tabs-mode t)
+  (setq tab-width 4))
+(add-hook 'web-mode-hook 'web-mode-hook)
 
 ;;;
 ;;; 80 文字のハイライト
