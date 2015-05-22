@@ -11,7 +11,7 @@
 ;;; startup画面を消す
 (setq inhibit-startup-screen t)
 
-;;; elisp
+;; ;;; elisp
 (add-to-list 'load-path "~/.emacs.d/elisp")
 
 ;;; elispファイルの中のファイルをすべてload-pathに入れる
@@ -41,13 +41,15 @@
   (require 'utop nil t)
   (require 'ocp-indent nil t))
 
-;;; fontの設定
+;; ;;; fontの設定
 (set-face-attribute 'default nil
   :height 110
   :family "DejaVu Sans Mono") ;; font size
-;;; 日本語fontの設定
-(set-fontset-font nil 'japanese-jisx0208
-  (font-spec :family "RictyDiminished"))
+;; ;;; 日本語fontの設定
+(if (display-graphic-p)
+    (set-fontset-font (frame-parameter nil 'font)
+                      'japanese-jisx0208
+                      (font-spec :family "RictyDiminished")))
 
 ;;; guide-key
 ;;; http://www.kaichan.info/blog/2012-12-03-emacs-advent-calendar-2012-03.html
@@ -528,7 +530,7 @@
 ;;;
 ;;; w3m
 ;;;
-(require 'w3m-load)
+(require 'w3m)
 (setq w3m-use-cookies t) ;; login できるように
 
 ;;; google-translate
