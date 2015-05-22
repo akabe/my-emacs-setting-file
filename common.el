@@ -525,6 +525,12 @@
 ;; to avoid bug
 (setq popwin:close-popup-window-timer-interval 0.05)
 
+;;;
+;;; w3m
+;;;
+(require 'w3m-load)
+(setq w3m-use-cookies t) ;; login できるように
+
 ;;; google-translate
 ;;; http://qiita.com/okonomi/items/f18c9221420eca47ebc6
 ;;; デフォルトの翻訳はC-x tで英語から日本語への翻訳
