@@ -41,15 +41,8 @@
   (require 'utop nil t)
   (require 'ocp-indent nil t))
 
-;; ;;; fontの設定
-(set-face-attribute 'default nil
-  :height 110
-  :family "DejaVu Sans Mono") ;; font size
-;; ;;; 日本語fontの設定
-(if (display-graphic-p)
-    (set-fontset-font (frame-parameter nil 'font)
-                      'japanese-jisx0208
-                      (font-spec :family "RictyDiminished")))
+;;; fontの設定
+(set-face-attribute 'default nil :family "Ricty Diminished" :height 130)
 
 ;;; guide-key
 ;;; http://www.kaichan.info/blog/2012-12-03-emacs-advent-calendar-2012-03.html
