@@ -42,7 +42,9 @@
   (require 'ocp-indent nil t))
 
 ;;; fontの設定
-(set-face-attribute 'default nil :family "Ricty Diminished" :height 130)
+(set-face-attribute 'default nil
+                    :family "Ricty Diminished Discord"
+                    :height 120)
 
 ;;; guide-key
 ;;; http://www.kaichan.info/blog/2012-12-03-emacs-advent-calendar-2012-03.html
@@ -596,7 +598,7 @@
 (when (require 'markdown-mode nil t)
   (setq auto-mode-alist (cons '("\\.markdown" . gfm-mode) auto-mode-alist))
   (setq auto-mode-alist (cons '("\\.md" . gfm-mode) auto-mode-alist))
-  (setq markdown-command "redcarpet")
+  (setq markdown-command (expand-file-name "~/.emacs.d/markdown2html.rb"))
   (add-hook 'gfm-mode-hook 'flyspell-mode))
 
 ;;; image+.el
@@ -652,11 +654,10 @@
 
 (defun web-mode-hook ()
   "Hooks for Web mode."
-  (setq web-mode-markup-indent-offset 4)
-  (setq web-mode-css-indent-offset    4)
-  (setq web-mode-code-indent-offset   4)
-  (setq indent-tabs-mode t)
-  (setq tab-width 4))
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset    2)
+  (setq web-mode-code-indent-offset   2)
+  (setq indent-tabs-mode nil))
 (add-hook 'web-mode-hook 'web-mode-hook)
 
 ;;;
