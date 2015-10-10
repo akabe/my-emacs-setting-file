@@ -19,6 +19,7 @@ puts <<__HEADER__
 <html lang="ja">
 <head>
 <meta charset="utf8">
+<link rel="stylesheet" href="https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css">
 <style type="text/css">
 /* https://github.com/richleland/pygments-css/blob/master/github.css */
 .hll { background-color: #ffffcc }

@@ -11,7 +11,7 @@
 ;;; startup画面を消す
 (setq inhibit-startup-screen t)
 
-;; ;;; elisp
+;;; elisp
 (add-to-list 'load-path "~/.emacs.d/elisp")
 
 ;;; elispファイルの中のファイルをすべてload-pathに入れる
@@ -32,8 +32,22 @@
 ;;; (yes/no) を (y/n)に
 (fset 'yes-or-no-p 'y-or-n-p)
 
+;;; *.~ とかのバックアップファイルを作らない
+(setq make-backup-files nil)
+;;; .#* とかのバックアップファイルを作らない
+(setq auto-save-default nil)
+
+;;; opam の環境変数を読み込む
+(defun opam-env ()
+  (interactive nil)
+  (dolist (var (car (read-from-string (shell-command-to-string "opam config env --sexp"))))
+    (setenv (car var) (cadr var))))
+
 ;;; opamがインストールされていればopamで入れた拡張をロード
 (when (executable-find "opam")
+  (opam-env)
+  (dolist (dir (split-string (getenv "PATH") ":"))
+    (add-to-list 'exec-path dir))
   (setq opam-share (substring
     (shell-command-to-string "opam config var share 2> /dev/null") 0 -1))
   (add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
@@ -310,8 +324,8 @@
 (define-key occur-mode-map (kbd "j") 'occur-next)
 (define-key occur-mode-map (kbd "k") 'occur-prev)
 
-(when (executable-find "ocp-indent")
-  (ocp-setup-indent))
+;(when (executable-find "ocp-indent")
+;  (ocp-setup-indent))
 
 ;; Start merlin on ocaml files
 (when (require 'merlin nil t)
@@ -355,7 +369,7 @@
 
   ;; set the path of the ocamlspot binary.
   ;; If you did make opt, ocamlspot.opt is recommended.
-  ;; (setq ocamlspot-command "~/Dropbox/prog/ocamlspot.opt")
+  (setq ocamlspot-command "/home/aabe/.emacs.d/ocamlspot.sh")
   )
 
 ;;; ocamldebug
