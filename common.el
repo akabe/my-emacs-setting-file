@@ -407,6 +407,17 @@
 
 (setq TeX-default-mode 'japanese-latex-mode)
 
+;;; C-t C-t で omake を起動し、evince を開く
+(defun latex-preview-setup ()
+  (interactive)
+  (setq pdf-file-name
+        (replace-regexp-in-string "\.tex$" ".pdf" buffer-file-name))
+  (start-process-shell-command "latex-omake-process" "omake-process" "omake" "-P")
+  (start-process-shell-command "latex-evince-process" "evince-process" "evince" pdf-file-name))
+(add-hook 'LaTeX-mode-hook
+          (lambda ()
+            (local-set-key (kbd "C-t C-t") 'latex-preview-setup)))
+
 ;;; latexmkを使ってコンパイル
 ;;; http://konn-san.com/prog/why-not-latexmk.html
 (when (require 'auctex-latexmk nil t)
