@@ -2,7 +2,7 @@
 (when (require 'package)
   (add-to-list
    'package-archives
-   '("melpa" . "http://melpa.milkbox.net/packages/") t)
+   '("melpa" . "http://melpa.org/packages/"))
   (package-initialize))
 
 (require 'em-glob)
@@ -25,9 +25,9 @@
 ;;; my-original-prefix-key-map
 ;;; 新しいキーマップの定義
 (defvar my-original-map
-  (make-sparse-keymap) "My original keymap binded to s-c.")
+  (make-sparse-keymap) "My original keymap binded to M-o.")
 (defalias 'my-original-prefix my-original-map)
-(define-key global-map (kbd "s-c") 'my-original-prefix)
+(define-key global-map (kbd "M-o") 'my-original-prefix)
 
 ;;; (yes/no) を (y/n)に
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -60,11 +60,27 @@
                     :family "Ricty Diminished Discord"
                     :height 120)
 
+;;; migemo
+;;; http://rubikitch.com/2014/08/20/migemo/
+(when (require 'migemo nil t)
+  (setq migemo-command "cmigemo")
+  (setq migemo-options '("-q" "--emacs"))
+  ;; Set your installed path
+  (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
+ 
+  (setq migemo-user-dictionary nil)
+  (setq migemo-regex-dictionary nil)
+  (setq migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  ;; migemoがなんかキーバインドを書きかえやがる
+  (define-key isearch-mode-map (kbd "C-y") 'isearch-yank-kill)
+  )
+
 ;;; guide-key
 ;;; http://www.kaichan.info/blog/2012-12-03-emacs-advent-calendar-2012-03.html
 (when (require 'guide-key)
   (setq guide-key/guide-key-sequence
-        '("C-x r" "C-x 4" "C-c" "M-s" "M-s h"))
+        '("C-x r" "C-x 4" "C-c" "M-s" "M-s h" "C-z" "M-o" "M-o g"))
   (setq guide-key/idle-delay 0.1)
   (defun guide-key-for-tuareg-mode ()
     (guide-key/add-local-guide-key-sequence "C-c .")
@@ -78,12 +94,28 @@
 ;;; その名前が存在すれば入力済みになる
 (ffap-bindings)
 
+;;; icomplete-mode
+;;; M-xなどで候補を表示する
+;; (icomplete-mode t)
+
+;;; autopair
+;; (when (require 'autopair)
+;;   (autopair-global-mode))
+
+;; smartparen
+(require 'smartparens-config)
+(smartparens-global-mode)
+
+;; ido-switch-buffer
+;; C-x bを強化する
+(ido-mode)
+
 ;;; iswitch-buffer buffer切り替えを強化
 ;;; C-r, C-sで候補選択ができる
 ;;; obsoleteなのでいつか標準じゃなくなると思う…
-(iswitchb-mode 1)
+;; (iswitchb-mode 1)
 ; 新しいバッファを作成するときに聞いてこない
-(setq iswitch-prompt-newbuffer nil)
+;; (setq iswitch-prompt-newbuffer nil)
 
 ;;; 履歴を次回Emacs起動時にも保存する
 (savehist-mode 1)
@@ -113,14 +145,29 @@
   ;; 詳しくは http://keens.github.io/blog/2013/10/04/emacs-dired/
   (setq dired-dwim-target t)
 
-  (add-hook 'dired-load-hook
-            (lambda ()
-              (define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
+  ;; rでファイル名変更モードに成る
+  (define-key dired-mode-map "r" 'wdired-change-to-wdired-mode)
 
-              (define-key dired-mode-map (kbd "C-c C-c") `compile)
-              ;; dired の上でもj,kで上下移動する
-              (define-key dired-mode-map (kbd "j") `dired-next-line)
-              (define-key dired-mode-map (kbd "k") `dired-previous-line))))
+  (define-key dired-mode-map (kbd "C-c C-c") `compile)
+  ;; dired の上でもj,kで上下移動する
+  (define-key dired-mode-map (kbd "j") `dired-next-line)
+  (define-key dired-mode-map (kbd "k") `dired-previous-line)
+
+  ;; dired上で簡単にファイル名などをrenameできるようにする
+  ;; http://www.bookshelf.jp/soft/meadow_25.html#SEC298
+  (require 'wdired)
+  (define-key dired-mode-map "r" 'wdired-change-to-wdired-mode))
+
+;;; dired上で表示するディレクトリやファイルの絞り込みを行うための拡張
+;;; - / /で絞り込みリセット
+;;; - / dでディレクトリのみ表示
+;;; - / .で拡張子で絞り込み
+;;; - / rで正規表現で絞り込み
+;;;
+;;; http://rubikitch.com/2015/04/07/dired-filter-2/
+(when (require 'dired-filter nil t)
+  (add-hook 'dired-mode-hook
+            '(lambda () (dired-filter-mode t))))
 
 ;;; C-wはkill-regionでリージョンをカットするコマンドだが、
 ;;; リージョンが選択されていない時には後ろの1ワードを削除するコマンドになる
@@ -138,11 +185,12 @@
 (setq completion-ignore-case t)
 
 ;;; 行末のスペースを保存するときに削除する
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-;;; 全角スペースを黄色でハイライト
-(global-hi-lock-mode 1)
-(highlight-phrase "　")
+;;; ただしmarkdownではやられると困るのでgfm-modeではやらない
+(add-hook 'before-save-hook
+          (lambda ()
+            (if (!= major-mode `gfm-mode)
+                (delete-trailing-whitespace)
+              )))
 
 ;;; 分割した画面間をShift+矢印で移動
 (setq windmove-wrap-around t)
@@ -157,7 +205,6 @@
 (require `recentf-ext)
 
 ;;; cua-mode
-;;; cua-modeの説明
 ;;; http://tech.kayac.com/archive/emacs-rectangle.html
 (setq cua-enable-cua-keys nil)
 (cua-mode t)
@@ -194,23 +241,49 @@
 ;;; ファイルに印をつけて、印の間を移動するためのモード
 ;;; 印の行はハイライトされるので見やすい
 ;;; 今の設定だと、M-mで印をつけ、M-,で前の印に移動、M-.で次の印に移動する
+;;; Emacsを終了しても印は残る！
+
+;;; 永続化 http://rubikitch.com/?s=bm&x=0&y=0
 (when (require 'bm)
-  (setq-default bm-buffer-persistence nil)
+  (defun bm-find-files-in-repository ()
+    (interactive)
+    (cl-loop for (key . _) in bm-repository
+             when (file-exists-p key)
+             do (find-file-noselect key)))
+
+  (defun bm-repository-load-and-open ()
+    (interactive)
+    (bm-repository-load)
+    (bm-find-files-in-repository))
+
+  ;; (setq bm-repository-file "~/.emacs.d/bm-repository")
+  (setq-default bm-buffer-persistence t)
   (setq bm-restore-repository-on-load t)
-  (add-hook 'find-file-hook 'bm-buffer-restore)
+  (add-hook 'after-init-hook 'bm-repository-load-and-open)
+
+  (defun bm-buffer-restore-safe ()
+    (ignore-errors (bm-buffer-restore)))
+
+  (add-hook 'find-file-hooks 'bm-buffer-restore-safe)
   (add-hook 'kill-buffer-hook 'bm-buffer-save)
-  (add-hook 'after-save-hook 'bm-buffer-save)
+
+  (defun bm-save-to-repository ()
+    (interactive)
+    (unless noninteractive
+      (bm-buffer-save-all)
+      (bm-repository-save)))
+
+  (add-hook 'kill-emacs-hook 'bm-save-to-repository)
+  (run-with-idle-timer 60 t 'bm-save-to-repository)
   (add-hook 'after-revert-hook 'bm-buffer-restore)
   (add-hook 'vc-before-checkin-hook 'bm-buffer-save)
-  (add-hook 'kill-emacs-hook '(lambda nil
-                                (bm-buffer-save-all)
-                                (bm-repository-save)))
+  (add-hook 'before-save-hook 'bm-buffer-save)
+
   (define-key global-map (kbd "M-m") 'bm-toggle)
   (define-key global-map (kbd "M-,") 'bm-previous)
   (define-key global-map (kbd "M-.") 'bm-next)
-  (custom-set-faces
-   '(bm-face ((t (:background "chartreuse" :foreground "black"))))
-   '(bm-fringe-face ((t (:background "DarkOrange1" :foreground "tan"))))))
+  (define-key my-original-map (kbd "l") 'bm-show-all)
+  )
 
 ;;; view-mode
 ;;; 閲覧専用モード
@@ -235,42 +308,15 @@
 (define-key view-mode-map (kbd "n") 'cua-scroll-up)
 (define-key view-mode-map (kbd "p") 'cua-scroll-down)
 
-(when (require 'viewer)
+(when (require 'viewer nil t)
   (setq viewer-modeline-color-unwritable "tomato")
   (setq viewer-modeline-color-view "orange")
   (viewer-change-modeline-color-setup))
 
-
-;; F11 フルスクリーン
-(defun fullboth-screen ()
-  (interactive)
-  (let ((fullscreen (frame-parameter (selected-frame) 'fullscreen)))
-    (cond
-     ((null fullscreen)
-      (set-frame-parameter (selected-frame) 'fullscreen 'fullboth))
-     (t
-      (set-frame-parameter (selected-frame) 'fullscreen 'nil))))
-  (redisplay))
-
-(global-set-key [f11] 'fullboth-screen)
-
-;; F12 最大化
-(defun maximized-screen ()
-  (interactive)
-  (let ((fullscreen (frame-parameter (selected-frame) 'fullscreen)))
-    (cond
-     ((null fullscreen)
-      (set-frame-parameter (selected-frame) 'fullscreen 'maximized))
-     (t
-      (set-frame-parameter (selected-frame) 'fullscreen 'nil))))
-  (redisplay))
-
-(global-set-key [f12] 'maximized-screen)
-
 ;;; pont-undoの設定
 ;;; カーソルの位置のリデュ・アンドゥをするための拡張
 ;;; 非常に便利！
-(when (require `point-undo)
+(when (require `point-undo nil t)
   (define-key dired-mode-map (kbd "[") 'point-undo)
   (define-key dired-mode-map (kbd "]") 'point-redo)
   (define-key view-mode-map (kbd "[") 'point-undo)
@@ -278,14 +324,18 @@
   (define-key global-map (kbd "M-[") 'point-undo)
   (define-key global-map (kbd "M-]") 'point-redo))
 
+;;; ibuffer
+(define-key global-map (kbd "C-x C-b") 'ibuffer)
 
 ;;; org-mode config
-                                        ; 画像のインライン表示をデフォルトにする
+;;; 画像のインライン表示をデフォルトにする
+
 (setq org-startup-with-inline-images t)
 (add-hook 'org-mode-hook 'turn-on-iimage-mode)
+(setq org-confirm-babel-evaluate nil)
 
 ;;; auto-complete.el
-(when (require 'auto-complete-config)
+(when (require 'auto-complete-config nil t)
   (add-to-list 'ac-dictionary-directories "~/.emacs.d/ac-dict")
   (ac-config-default)
   (setq ac-candidate-limit 15)
@@ -295,13 +345,6 @@
   (setq ac-ignore-case nil)
   (setq ac-menu-height 8))
 
-;;; c-eldoc
-(when (require 'c-eldoc nil t)
-  (add-hook 'c-mode-hook
-            (lambda ()
-              (set (make-local-variable 'eldoc-idle-delay) 0.20)
-              (c-turn-on-eldoc-mode))))
-
 ;;; 括弧の範囲色
 ;;; #500 は暗い赤、背景が黒いと映える
 ;;; テーマによっては見づらいことがあるので、
@@ -309,6 +352,7 @@
 (set-face-background 'show-paren-match-face "#500")
 
 ;;; redo+
+;;; redoは標準にはないので拡張で入れる
 (when (require 'redo+ nil t)
   (define-key global-map (kbd "C-?") 'redo))
 
@@ -324,56 +368,32 @@
 (define-key occur-mode-map (kbd "j") 'occur-next)
 (define-key occur-mode-map (kbd "k") 'occur-prev)
 
-;(when (executable-find "ocp-indent")
-;  (ocp-setup-indent))
-
 ;; Start merlin on ocaml files
 (when (require 'merlin nil t)
   (add-hook 'tuareg-mode-hook 'merlin-mode t)
   (add-hook 'caml-mode-hook 'merlin-mode t)
+
   ;; Enable auto-complete
   (setq merlin-use-auto-complete-mode 'easy)
+
   ;; Use opam switch to lookup ocamlmerlin binary
   (setq merlin-command 'opam)
   (add-hook
    'tuareg-mode-hook
    '(lambda ()
-      (define-key tuareg-mode-map "\C-c\C-p" 'merlin-pop-stack)
-      (local-set-key "\C-ch" 'merlin-pop-stack))))
-
-;;; ocamlspot
-;;; ocamlspotは現状自動的にロードできる仕組みになっていません
-;;; 手動で入れてください。merlinがあれば何とかなりますが。
-(require 'caml)
-(when (require 'ocamlspot nil t)
-  ;; tuareg mode hook (use caml-mode-hook instead if you use caml-mode)
-  (add-hook
-   'tuareg-mode-hook
-   '(lambda ()
       (ocp-setup-indent)
-      ;; turn on auto-fill minor mode
-      ;; (auto-fill-mode 1)
-
-      ;; ocamlspot
-      (local-set-key "\C-c;" 'ocamlspot-query)
-      (local-set-key "\C-c:" 'ocamlspot-query-interface)
-      (local-set-key "\C-c'" 'ocamlspot-query-uses)
-      (local-set-key "\C-ct" 'ocamlspot-type)
-      (local-set-key "\C-c\C-i" 'ocamlspot-xtype)
-      (local-set-key "\C-c\C-y" 'ocamlspot-type-and-copy)
-      (local-set-key "\C-cp" 'ocamlspot-pop-jump-stack)
-      (define-key tuareg-mode-map (kbd "C-M-n") 'forward-list)
-      (define-key tuareg-mode-map (kbd "C-M-p") 'backward-list)
-      )
-   )
-
-  ;; set the path of the ocamlspot binary.
-  ;; If you did make opt, ocamlspot.opt is recommended.
-  (setq ocamlspot-command "/home/aabe/.emacs.d/ocamlspot.sh")
-  )
+      (define-key tuareg-mode-map "\C-c\C-p" 'merlin-pop-stack)
+      (local-set-key "\C-ch" 'merlin-pop-stack)
+      (defun utop-eval-region-or-phrase ()
+        (interactive)
+        (if (region-active-p)
+            (utop-eval-region (mark) (point))
+          (utop-eval-phrase)))
+      (define-key tuareg-mode-map "\C-x\C-e" 'utop-eval-region-or-phrase))
+   ))
 
 ;;; ocamldebug
-;;; 標準よりもキーバインドを使いやすくします(でないと死ぬ)
+;;; 標準よりもキーバインドを使いやすくします
 (when (require 'ocamldebug nil t)
   (def-ocamldebug "backstep" "\C-b" "Back step one source line with display.")
   (def-ocamldebug "previous" "\C-p" "")
@@ -521,28 +541,21 @@
     (save-window-excursion ad-do-it)
     (unless (get-buffer-window "*Find*")
       (pop-to-buffer "*Find*")))
+
+  (defadvice bm-show-all (around bm-show-all-popwin activate)
+    (save-window-excursion ad-do-it)
+    (unless (get-buffer-window "*bm-bookmarks*")
+      (pop-to-buffer "*bm-bookmarks*")))
   )
 
 
 
-                                        ; 最近出したminibufferをpopupさせる
+;; 最近出したminibufferをpopupさせる
 (define-key popwin:keymap (kbd "j") `popwin:popup-last-buffer)
-                                        ; 最近出したminibufferを通常通り表示させる
+;; 最近出したminibufferを通常通り表示させる
 (define-key popwin:keymap (kbd "k") `popwin:original-pop-to-last-buffer)
-                                        ; set the height of popup-buffer
+;; set the height of popup-buffer
 (setq popwin:popup-window-height 0.5)
-                                        ; add popup buffers
-(setq popwin:special-display-config
-      (append `(("*grep*"))
-              popwin:special-display-config))
-                                        ; *grep*に素早く切り換える
-(defun my-switch-grep-buffer()
-  "grepバッファに切り替える"
-  (interactive)
-  (if (get-buffer "*grep*")
-      (pop-to-buffer "*grep*")
-    (message "No grep buffer")))
-(define-key popwin:keymap (kbd "g") `my-switch-grep-buffer)
 
 ;; to avoid bug
 (setq popwin:close-popup-window-timer-interval 0.05)
@@ -557,45 +570,64 @@
 ;;; http://qiita.com/okonomi/items/f18c9221420eca47ebc6
 ;;; デフォルトの翻訳はC-x tで英語から日本語への翻訳
 ;;; この言語縛りを外すには、コマンドの前にC-uを押す
-(require 'google-translate)
-(global-set-key (kbd "C-x t") 'google-translate-at-point)
-(global-set-key (kbd "C-x T") 'google-translate-query-translate)
-;; 翻訳のデフォルト値を設定（en -> ja）
-(custom-set-variables
- '(google-translate-default-source-language "en")
- '(google-translate-default-target-language "ja"))
+(when (require 'google-translate nil t)
+  (global-set-key (kbd "C-x t") 'google-translate-at-point)
+  (global-set-key (kbd "C-x T") 'google-translate-query-translate)
+  ;; 翻訳のデフォルト値を設定（en -> ja）
+  (custom-set-variables
+   '(google-translate-default-source-language "en")
+   '(google-translate-default-target-language "ja")))
 
 ;;; ace-jump-mode
 ;;; http://d.hatena.ne.jp/syohex/20120304/1330822993
 ;;; C-c SPCで素早くカーソルを移動する(上のリンク参照)
 ;;; C-x SPCで戻ってくる
-(autoload
-  'ace-jump-mode
-  "ace-jump-mode"
-  "Emacs quick move minor mode"
-  t)
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
-(autoload
-  'ace-jump-mode-pop-mark
-  "ace-jump-mode"
-  "Ace jump back:-)"
-  t)
-(eval-after-load "ace-jump-mode"
-  '(ace-jump-mode-enable-mark-sync))
-(define-key global-map (kbd "C-x SPC") 'ace-jump-mode-pop-mark)
-(define-key global-map (kbd "C-c l") 'ace-jump-line-mode)
-(define-key global-map (kbd "C-c w") 'ace-jump-word-mode)
-(require 'shell)
-(define-key shell-mode-map (kbd "C-c SPC") 'ace-jump-mode)
+(when (require 'ace-jump nil t)
+  (autoload
+    'ace-jump-mode
+    "ace-jump-mode"
+    "Emacs quick move minor mode"
+    t)
+  (define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+  (autoload
+    'ace-jump-mode-pop-mark
+    "ace-jump-mode"
+    "Ace jump back:-)"
+    t)
+  (eval-after-load "ace-jump-mode"
+    '(ace-jump-mode-enable-mark-sync))
+  (define-key global-map (kbd "C-x SPC") 'ace-jump-mode-pop-mark)
+  (define-key global-map (kbd "C-c l") 'ace-jump-line-mode)
+  (define-key global-map (kbd "C-c w") 'ace-jump-word-mode)
+  (require 'shell)
+  (define-key shell-mode-map (kbd "C-c SPC") 'ace-jump-mode))
 
-;;; git-guitter
+;;; git-gutter
 ;;; http://qiita.com/syohex/items/a669b35fbbfcdda0cbf2
-(when (require 'git-gutter)
+(when (require 'git-gutter nil t)
   (global-git-gutter-mode t)
   (global-set-key (kbd "M-n") 'git-gutter:next-hunk)
-  (global-set-key (kbd "M-p") 'git-gutter:previous-hunk))
+  (global-set-key (kbd "M-p") 'git-gutter:previous-hunk)
+
+  ;; originalのprefixコマンドを作る
+  (defvar my-git-map (make-sparse-keymap))
+  (defalias 'my-git-prefix my-git-map)
+
+  (define-key global-map (kbd "M-o g") my-git-map)
+
+  (define-key my-git-map (kbd "s") 'git-gutter:set-start-revision)
+  (define-key my-git-map (kbd "p") 'git-gutter:popup-hunk)
+  (define-key my-git-map (kbd "r") 'git-gutter:revert-hunk)
+)
+
+(when (require 'magit nil t)
+  (define-key my-original-map (kbd "M-o") 'magit-dispatch-popup)
+  (define-key magit-popup-mode-map (kbd "s") `magit-status)
+  (setq magit-auto-revert-mode nil)
+  )
 
 ;;; org-mode
+(require 'org)
 (setq org-export-latex-date-format "%Y-%m-%d")
 (setq org-export-latex-classes nil)
 (add-to-list 'org-export-latex-classes
@@ -612,6 +644,7 @@
                "\\documentclass[compress,dvipdfm]{beamer}"
                org-beamer-sectioning
                ))
+(define-key org-mode-map (kbd "M-i") 'pcomplete)
 
 ;;;
 ;;; markdown-mode
@@ -628,22 +661,20 @@
 
 ;;; image+.el
 ;;; emacs上で表示する画像の大きさなどを調整するための拡張
-(require 'image+)
-(imagex-auto-adjust-mode 1)
-
-(add-to-list 'popwin:special-display-config '("*Find*"))
+(when (require 'image+ nil t)
+  (imagex-auto-adjust-mode 1))
 
 ;;; anzu
 ;;; http://qiita.com/syohex/items/56cf3b7f7d9943f7a7ba
-(when (require 'anzu) nil t
-      (global-anzu-mode +1)
-      (setq anzu-mode-lighter "")
-      (setq anzu-deactivate-region t)
-      (setq anzu-search-threshold 100)
-      (global-set-key (kbd "M-s a") 'anzu-query-replace-at-cursor)
-      (global-set-key (kbd "M-s q") 'anzu-query-replace)
-      (global-set-key (kbd "M-s r") 'anzu-replace-at-cursor-thing)
-      )
+(when (require 'anzu nil t)
+  (global-anzu-mode +1)
+  (setq anzu-mode-lighter "")
+  (setq anzu-deactivate-region t)
+  (setq anzu-search-threshold 1000)
+  (global-set-key (kbd "M-s a") 'anzu-query-replace-at-cursor)
+  (global-set-key (kbd "M-s q") 'anzu-query-replace)
+  (global-set-key (kbd "M-s r") 'anzu-replace-at-cursor-thing)
+)
 
 (setq css-indent-offset 2)
 
@@ -696,6 +727,38 @@
 (add-hook 'cc-mode-hook 'warn-column80)
 (add-hook 'tuareg-mode-hook 'warn-column80)
 
+;;; jedi
+;;; pythonでメソッドなどの保管を行うためのプラグイン
+(when (require `jedi nil t)
+  (add-hook 'python-mode-hook 'jedi:setup)
+  (setq jedi:complete-on-dot t)                 ; optional
+)
+
+;;; sml-mode
+(when (require 'sml-mode nil t)
+  (define-key sml-mode-map (kbd "C-c C-c") `compile)
+  )
+
+;;; makefile-mode
+(add-hook 'makefile-mode-hook
+  '(lambda ()
+     (local-set-key (kbd "C-c C-c") `compile)
+     ))
+
+;; ghc-mod
+(add-to-list 'exec-path (concat (getenv "HOME") "/.cabal/bin"))
+(add-to-list 'load-path "~/.cabal/share/x86_64-linux-ghc-7.6.3/ghc-mod-5.4.0.0/elisp/")
+(autoload 'ghc-init "ghc")
+
+(defun my-ac-haskell-mode ()
+  (add-to-list ac-sources '(ac-source-ghc-mod)))
+
+(add-hook 'haskell-mode-hook
+          '(lambda ()
+             (ghc-init)
+             (my-ac-haskell-mode)))
+;; (define-key haskell-mode-map (kbd "M-i") 'ghc-complete)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; keymapの設定やキーバインドの変更部分
 ;; ここにまとめて書くこと
@@ -713,34 +776,25 @@
 
 (define-key global-map [(C x)(h)] 'recentf-open-files)
 (define-key global-map [(C x)(C z)] `just-one-space)
-(when (require 'popwin)
-  (define-key global-map [(C z)] popwin:keymap))
 
-;;; compile
-(define-key my-original-map (kbd "s-c") `compile)
+(when (require 'popwin nil t)
+  (define-key global-map [(C z)] popwin:keymap)
+  (add-to-list 'popwin:special-display-config '("*Find*")))
 
 (define-key compilation-mode-map (kbd "j") 'compilation-next-error)
 (define-key compilation-mode-map (kbd "k") 'compilation-previous-error)
 
-(define-key my-original-map (kbd "o") `org-mode)
 (define-key global-map (kbd "s-g") `keyboard-quit)
-;;; 警告なしでrevert-bufferする
-(define-key my-original-map (kbd "s-b")
-  '(lambda () (interactive) (revert-buffer nil t t)))
-
 
 ;;; auto-complete-mode start
-(define-key my-original-map (kbd "a") `auto-complete-mode)
+(define-key my-original-map (kbd "C-a") `auto-complete-mode)
 
-;;; delete-other-windows-vertically
+(define-key my-original-map (kbd "d") `delete-other-windows-vertically)
 (define-key my-original-map (kbd "d") `delete-other-windows-vertically)
 
 ;;; back-space
 (global-set-key "\C-h" 'delete-backward-char)
 (global-set-key [(C -)] 'help-command)
-
-;;; M-x めんどくさい
-(global-set-key (kbd "C-;") 'execute-extended-command)
 
 ;;; view-mode
 (global-set-key (kbd "C-c C-v") 'view-mode)
@@ -766,12 +820,8 @@
 ;; customize-group
 (global-set-key [f5] 'customize-group)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; start phase
-;; 起動時に実行するコマンドを書く
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; magit-log
+(define-key my-original-map (kbd "s") 'magit-log)
 
-;;; maximize the buffer initially
-;;;
-;; (custom-set-variables
-;;  '(initial-frame-alist (quote ((fullscreen . maximized)))))
+;; compile
+(define-key global-map (kbd "C-c C-c") 'compile)

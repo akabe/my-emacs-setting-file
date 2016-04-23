@@ -9,8 +9,9 @@
 (setq initial-recommend-packages
       '(tuareg magit git-gutter markdown-mode auto-complete
 	       expand-region bm google-translate popup popwin redo+ viewer
-	       ace-jump-mode anzu sml-mode wgrep point-undo
-	       org-present image+ ac-math c-eldoc auctex auctex-latexmk fm
-               recentf-ext guide-key w3m web-mode))
+	       ace-jump-mode anzu wgrep point-undo
+	       org-present image+ ac-math auctex auctex-latexmk fm ag
+	       recentf-ext guide-key w3m smartparens minibuf-isearch search-web
+	       web-mode sml-mode))
 
 (mapc 'package-install initial-recommend-packages)
