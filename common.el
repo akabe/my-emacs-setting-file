@@ -1,3 +1,6 @@
+;;; exec-path
+(add-to-list 'exec-path "/usr/local/bin")
+
 ;;; package.elの初期化
 (when (require 'package)
   (add-to-list
@@ -56,9 +59,13 @@
   (require 'ocp-indent nil t))
 
 ;;; fontの設定
-(set-face-attribute 'default nil
-                    :family "Ricty Diminished Discord"
-                    :height 120)
+(set-face-attribute
+ 'default nil
+ :family "Ricty Diminished"
+ :height 150)
+(set-fontset-font
+ nil 'japanese-jisx0208
+ (font-spec :family "Hiragino Kaku Gothic Pro"))
 
 ;;; migemo
 ;;; http://rubikitch.com/2014/08/20/migemo/
@@ -67,7 +74,7 @@
   (setq migemo-options '("-q" "--emacs"))
   ;; Set your installed path
   (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
- 
+
   (setq migemo-user-dictionary nil)
   (setq migemo-regex-dictionary nil)
   (setq migemo-coding-system 'utf-8-unix)
@@ -186,15 +193,11 @@
 
 ;;; 行末のスペースを保存するときに削除する
 ;;; ただしmarkdownではやられると困るのでgfm-modeではやらない
-(add-hook 'before-save-hook
-          (lambda ()
-            (if (!= major-mode `gfm-mode)
-                (delete-trailing-whitespace)
-              )))
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 ;;; 分割した画面間をShift+矢印で移動
-(setq windmove-wrap-around t)
-(windmove-default-keybindings)
+;(setq windmove-wrap-around t)
+;(windmove-default-keybindings)
 
 ;;; 最近開いたファイルを追加
 ;;; http://d.hatena.ne.jp/tomoya/20110217/1297928222
@@ -564,6 +567,7 @@
 ;;; w3m
 ;;;
 (require 'w3m)
+(setq w3m-command "/usr/local/bin/w3m")
 (setq w3m-use-cookies t) ;; login できるように
 
 ;;; google-translate
@@ -713,8 +717,19 @@
   (setq web-mode-markup-indent-offset 2)
   (setq web-mode-css-indent-offset    2)
   (setq web-mode-code-indent-offset   2)
-  (setq indent-tabs-mode nil))
+  (setq indent-tabs-mode nil)
+  (setq js-indent-level 2))
 (add-hook 'web-mode-hook 'web-mode-hook)
+
+;; javascript-mode
+(setq js-indent-level 2)
+
+;;;
+;;; Scala
+;;;
+(require 'scala-mode)
+(require 'ensime)
+(add-hook 'scala-mode-hook 'ensime-scala-mode-hook)
 
 ;;;
 ;;; 80 文字のハイライト
@@ -759,6 +774,13 @@
              (my-ac-haskell-mode)))
 ;; (define-key haskell-mode-map (kbd "M-i") 'ghc-complete)
 
+;; python-mode
+(add-hook 'python-mode-hook
+          '(lambda()
+             (setq indent-tabs-mode nil)
+             (setq indent-level 4)
+             (setq python-indent 4)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; keymapの設定やキーバインドの変更部分
 ;; ここにまとめて書くこと
@@ -797,7 +819,7 @@
 (global-set-key [(C -)] 'help-command)
 
 ;;; view-mode
-(global-set-key (kbd "C-c C-v") 'view-mode)
+;; (global-set-key (kbd "C-c C-v") 'view-mode)
 
 ;;; auto-complete
 (global-set-key (kbd "M-i") 'auto-complete)
